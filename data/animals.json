@@ -6,7 +6,9 @@
     "suara": "assets/sounds/kukuruyuk.mp3",
     "marker": "assets/markers/ayam.patt",
     "scale": 0.5,
-    "deskripsi": "Ayam berkokok di pagi hari."
+    "minScale": 0.3,
+    "maxScale": 2.5,
+    "deskripsi": "Ayam adalah unggas yang berkokok di pagi hari."
   },
   {
     "id": "bebek",
@@ -14,7 +16,9 @@
     "model": "assets/models/bebek.glb",
     "suara": "assets/sounds/kwek.mp3",
     "marker": "assets/markers/bebek.patt",
-    "scale": 0.5,
-    "deskripsi": "Bebek hidup di sekitar air."
+    "scale": 0.6,
+    "minScale": 0.4,
+    "maxScale": 3,
+    "deskripsi": "Bebek hidup di sekitar air dan bersuara kwek."
   }
 ]

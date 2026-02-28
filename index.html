@@ -13,7 +13,6 @@
             font-family: Arial;
         }
 
-        /* UI Premium */
         .ui {
             position: fixed;
             bottom: 20px;
@@ -81,6 +80,8 @@
         let currentScale = 0.5;
         let currentRotation = 0;
         let currentSound = null;
+        let currentMinScale = 0.3;
+        let currentMaxScale = 3;
         let initialDistance = null;
 
         const namaHewan = document.getElementById("namaHewan");
@@ -94,20 +95,17 @@
 
                 data.forEach(animal => {
 
-                    // ASSET MODEL
                     const modelAsset = document.createElement("a-asset-item");
                     modelAsset.setAttribute("id", animal.id + "Model");
                     modelAsset.setAttribute("src", animal.model);
                     assetContainer.appendChild(modelAsset);
 
-                    // AUDIO
                     const audio = document.createElement("audio");
                     audio.setAttribute("id", animal.id + "Sound");
                     audio.setAttribute("src", animal.suara);
                     audio.setAttribute("preload", "auto");
                     document.body.appendChild(audio);
 
-                    // MARKER
                     const marker = document.createElement("a-marker");
                     marker.setAttribute("type", "pattern");
                     marker.setAttribute("url", animal.marker);
@@ -125,6 +123,9 @@
                         currentScale = animal.scale;
                         currentRotation = 0;
                         currentSound = animal.id + "Sound";
+
+                        currentMinScale = animal.minScale || 0.3;
+                        currentMaxScale = animal.maxScale || 3;
 
                         namaHewan.innerText = animal.nama;
                         namaHewan.style.display = "block";
@@ -145,35 +146,42 @@
 
             });
 
-        // ZOOM BUTTON
         function zoomIn() {
             if (!currentObj) return;
+
             currentScale += 0.1;
-            if (currentScale > 3) currentScale = 3;
-            currentObj.setAttribute("scale", `${currentScale} ${currentScale} ${currentScale}`);
+            if (currentScale > currentMaxScale)
+                currentScale = currentMaxScale;
+
+            currentObj.setAttribute("scale",
+                `${currentScale} ${currentScale} ${currentScale}`);
         }
 
         function zoomOut() {
             if (!currentObj) return;
+
             currentScale -= 0.1;
-            if (currentScale < 0.1) currentScale = 0.1;
-            currentObj.setAttribute("scale", `${currentScale} ${currentScale} ${currentScale}`);
+            if (currentScale < currentMinScale)
+                currentScale = currentMinScale;
+
+            currentObj.setAttribute("scale",
+                `${currentScale} ${currentScale} ${currentScale}`);
         }
 
-        // ROTATE
         function rotateLeft() {
             if (!currentObj) return;
             currentRotation -= 15;
-            currentObj.setAttribute("rotation", `0 ${currentRotation} 0`);
+            currentObj.setAttribute("rotation",
+                `0 ${currentRotation} 0`);
         }
 
         function rotateRight() {
             if (!currentObj) return;
             currentRotation += 15;
-            currentObj.setAttribute("rotation", `0 ${currentRotation} 0`);
+            currentObj.setAttribute("rotation",
+                `0 ${currentRotation} 0`);
         }
 
-        // SOUND
         function playSound() {
             if (!currentSound) return;
             const audio = document.getElementById(currentSound);
@@ -182,7 +190,6 @@
             audio.play().catch(() => { });
         }
 
-        // PINCH ZOOM
         document.addEventListener("touchstart", function (e) {
             if (e.touches.length == 2) {
                 initialDistance = getDistance(e.touches);
@@ -191,16 +198,21 @@
 
         document.addEventListener("touchmove", function (e) {
             if (e.touches.length == 2 && currentObj) {
+
                 let newDistance = getDistance(e.touches);
                 let diff = newDistance - initialDistance;
                 initialDistance = newDistance;
 
                 currentScale += diff * 0.005;
 
-                if (currentScale < 0.1) currentScale = 0.1;
-                if (currentScale > 3) currentScale = 3;
+                if (currentScale < currentMinScale)
+                    currentScale = currentMinScale;
 
-                currentObj.setAttribute("scale", `${currentScale} ${currentScale} ${currentScale}`);
+                if (currentScale > currentMaxScale)
+                    currentScale = currentMaxScale;
+
+                currentObj.setAttribute("scale",
+                    `${currentScale} ${currentScale} ${currentScale}`);
             }
         });
 
