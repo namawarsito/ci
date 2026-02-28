@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    body { margin: 0; overflow: hidden; }
+
+    .ui-container {
+      position: fixed;
+      bottom: 30px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      z-index: 999;
+    }
+
+    .btn {
+      padding: 14px 22px;
+      border-radius: 30px;
+      border: none;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      transition: 0.2s;
+      color: white;
+      min-width: 120px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(45deg,#ff9800,#ff5722);
+    }
+
+    .btn-success {
+      background: linear-gradient(45deg,#4caf50,#2e7d32);
+    }
+
+    .btn-danger {
+      background: linear-gradient(45deg,#f44336,#b71c1c);
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- AUDIO HTML (lebih stabil dari a-frame sound) -->
+  <audio id="suaraAyam" src="kukuruyuk.mp3" preload="auto"></audio>
+
+  <a-scene
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+    renderer="logarithmicDepthBuffer: true;"
+  >
+
+    <a-assets>
+      <a-asset-item id="ayamModel" src="ayam.glb"></a-asset-item>
+    </a-assets>
+
+    <a-marker type="pattern" url="marker.patt">
+
+      <a-entity
+        id="ayam"
+        gltf-model="#ayamModel"
+        scale="0.5 0.5 0.5"
+        position="0 0 0"
+        rotation="0 0 0">
+      </a-entity>
+
+    </a-marker>
+
+    <a-entity camera></a-entity>
+
+  </a-scene>
+
+  <!-- Tombol UI -->
+  <div class="ui-container">
+    <button class="btn btn-primary" onclick="rotateAyam()">Putar 🐔</button>
+    <button class="btn btn-success" onclick="playSound()">Kukuruyuk 🔊</button>
+    <button class="btn btn-danger" onclick="stopSound()">Stop ⏹</button>
+  </div>
+
+  <script>
+    let rotating = false;
+
+    function rotateAyam() {
+      const ayam = document.querySelector('#ayam');
+
+      if (!rotating) {
+        ayam.setAttribute('animation', {
+          property: 'rotation',
+          to: '0 360 0',
+          loop: true,
+          dur: 4000,
+          easing: 'linear'
+        });
+        rotating = true;
+      } else {
+        ayam.removeAttribute('animation');
+        rotating = false;
+      }
+    }
+
+    function playSound() {
+      const audio = document.getElementById("suaraAyam");
+
+      audio.pause();
+      audio.currentTime = 0;
+
+      audio.play().catch(error => {
+        console.log("Audio gagal diputar:", error);
+      });
+    }
+
+    function stopSound() {
+      const audio = document.getElementById("suaraAyam");
+      audio.pause();
+      audio.currentTime = 0;
+    }
+  </script>
+
+</body>
+</html>

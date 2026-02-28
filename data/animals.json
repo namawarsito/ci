@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ayam",
+    "nama": "AYAM",
+    "model": "assets/models/ayam.glb",
+    "suara": "assets/sounds/kukuruyuk.mp3",
+    "marker": "assets/markers/ayam.patt",
+    "scale": 0.5,
+    "deskripsi": "Ayam berkokok di pagi hari."
+  },
+  {
+    "id": "bebek",
+    "nama": "BEBEK",
+    "model": "assets/models/bebek.glb",
+    "suara": "assets/sounds/kwek.mp3",
+    "marker": "assets/markers/bebek.patt",
+    "scale": 0.5,
+    "deskripsi": "Bebek hidup di sekitar air."
+  }
+]

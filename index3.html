@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+
+<style>
+body { margin:0; overflow:hidden; }
+
+.ui {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  z-index:999;
+}
+
+.btn {
+  padding:10px 16px;
+  border:none;
+  border-radius:20px;
+  background:#ff5722;
+  color:white;
+  font-weight:bold;
+  font-size:14px;
+}
+
+.nama-hewan {
+  position:fixed;
+  top:20px;
+  left:0;
+  right:0;
+  text-align:center;
+  font-size:24px;
+  font-weight:bold;
+  color:white;
+  text-shadow:0 0 10px black;
+  z-index:999;
+}
+</style>
+</head>
+
+<body>
+
+<div class="nama-hewan" id="namaHewan"></div>
+
+<audio id="suaraAyam" src="kukuruyuk.mp3" preload="auto"></audio>
+<audio id="suaraBebek" src="kwek.mp3" preload="auto"></audio>
+
+<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="logarithmicDepthBuffer: true;">
+
+<a-assets>
+  <a-asset-item id="ayamModel" src="ayam.glb"></a-asset-item>
+  <a-asset-item id="bebekModel" src="bebek.glb"></a-asset-item>
+</a-assets>
+
+<a-marker type="pattern" url="ayam.patt" id="markerAyam">
+  <a-entity id="ayamObj" gltf-model="#ayamModel" scale="0.5 0.5 0.5"></a-entity>
+</a-marker>
+
+<a-marker type="pattern" url="bebek.patt" id="markerBebek">
+  <a-entity id="bebekObj" gltf-model="#bebekModel" scale="0.5 0.5 0.5"></a-entity>
+</a-marker>
+
+<a-entity camera></a-entity>
+</a-scene>
+
+<div class="ui">
+  <button class="btn" onclick="zoomIn()">Zoom +</button>
+  <button class="btn" onclick="zoomOut()">Zoom -</button>
+  <button class="btn" onclick="rotateLeft()">⟲</button>
+  <button class="btn" onclick="rotateRight()">⟳</button>
+  <button class="btn" onclick="playSound()">🔊 Suara</button>
+</div>
+
+<script>
+
+let currentObj = null;
+let currentScale = 0.5;
+let currentRotation = 0;
+let currentSound = null;
+
+const namaHewan = document.getElementById("namaHewan");
+
+function setActive(objId, nama, suaraId) {
+  currentObj = document.getElementById(objId);
+  currentScale = 0.5;
+  currentRotation = 0;
+  currentSound = suaraId;
+
+  namaHewan.innerText = nama;
+
+  currentObj.setAttribute("scale", `${currentScale} ${currentScale} ${currentScale}`);
+  currentObj.setAttribute("rotation", `0 0 0`);
+}
+
+document.querySelector("#markerAyam").addEventListener("markerFound", () => {
+  setActive("ayamObj","AYAM","suaraAyam");
+});
+
+document.querySelector("#markerBebek").addEventListener("markerFound", () => {
+  setActive("bebekObj","BEBEK","suaraBebek");
+});
+
+function zoomIn(){
+  if(!currentObj) return;
+  currentScale += 0.1;
+  currentObj.setAttribute("scale", `${currentScale} ${currentScale} ${currentScale}`);
+}
+
+function zoomOut(){
+  if(!currentObj) return;
+  currentScale -= 0.1;
+  if(currentScale < 0.1) currentScale = 0.1;
+  currentObj.setAttribute("scale", `${currentScale} ${currentScale} ${currentScale}`);
+}
+
+function rotateLeft(){
+  if(!currentObj) return;
+  currentRotation -= 15;
+  currentObj.setAttribute("rotation", `0 ${currentRotation} 0`);
+}
+
+function rotateRight(){
+  if(!currentObj) return;
+  currentRotation += 15;
+  currentObj.setAttribute("rotation", `0 ${currentRotation} 0`);
+}
+
+function playSound(){
+  if(!currentSound) return;
+
+  const audio = document.getElementById(currentSound);
+  audio.pause();
+  audio.currentTime = 0;
+  audio.play().catch(()=>{});
+}
+
+</script>
+
+</body>
+</html>
