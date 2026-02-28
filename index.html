@@ -1,273 +1,317 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+
+    <title>AR Edukasi Interaktif</title>
 
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            font-family: Arial;
+            font-family: Arial, sans-serif;
+            background: black;
         }
 
+        /* Nama Hewan */
+        .nama-hewan {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 24px;
+            border-radius: 40px;
+            backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.45);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            display: none;
+            z-index: 999;
+            letter-spacing: 1px;
+        }
+
+        /* UI Premium */
         .ui {
             position: fixed;
-            bottom: 20px;
+            bottom: 25px;
             left: 50%;
             transform: translateX(-50%);
             display: none;
-            gap: 8px;
-            padding: 12px 18px;
-            border-radius: 40px;
-            backdrop-filter: blur(15px);
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            gap: 10px;
+            padding: 14px 20px;
+            border-radius: 50px;
+            backdrop-filter: blur(18px);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             z-index: 999;
         }
 
         .btn {
-            padding: 8px 14px;
+            padding: 10px 16px;
             border: none;
             border-radius: 50px;
             background: linear-gradient(45deg, #ff9800, #ff5722);
             color: white;
             font-weight: bold;
             cursor: pointer;
+            font-size: 16px;
+            transition: 0.2s;
         }
 
-        .nama-hewan {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 8px 20px;
-            border-radius: 30px;
-            backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.4);
-            color: white;
-            font-size: 22px;
-            font-weight: bold;
-            display: none;
-            z-index: 999;
+        .btn:active {
+            transform: scale(0.9);
         }
     </style>
 </head>
 
 <body>
 
+    <!-- Nama Hewan -->
     <div class="nama-hewan" id="namaHewan"></div>
 
-    <a-scene id="scene" embedded arjs="sourceType: webcam; debugUIEnabled: false;"
-        renderer="logarithmicDepthBuffer: true;">
+    <!-- AR Scene -->
+    <a-scene id="scene"
+        embedded
+        vr-mode-ui="enabled: false"
+        arjs="sourceType: webcam; debugUIEnabled: false;"
+        renderer="logarithmicDepthBuffer: true; precision: mediump;">
+
         <a-assets id="assetContainer"></a-assets>
         <a-entity camera></a-entity>
+
     </a-scene>
 
+    <!-- UI Controls -->
     <div class="ui" id="controlUI">
         <button class="btn" onclick="zoomOut()">➖</button>
         <button class="btn" onclick="zoomIn()">➕</button>
-
         <button class="btn" onclick="rotateUp()">⬆</button>
         <button class="btn" onclick="rotateDown()">⬇</button>
-
         <button class="btn" onclick="rotateLeft()">⟲</button>
         <button class="btn" onclick="rotateRight()">⟳</button>
-
         <button class="btn" onclick="playSound()">🔊</button>
     </div>
 
+    <!-- SCRIPT -->
     <script>
 
-let currentObj = null;
-let currentScale = 0.5;
-let currentRotationY = 0;
-let currentRotationX = 0;
-let currentSound = null;
-let currentMinScale = 0.3;
-let currentMaxScale = 3;
+        let currentObj = null;
+        let currentScale = 0.5;
+        let currentRotationY = 0;
+        let currentRotationX = 0;
+        let currentSound = null;
+        let currentMinScale = 0.3;
+        let currentMaxScale = 3;
 
-let initialDistance = null;
-let startX = 0;
-let startY = 0;
-let isDragging = false;
+        let initialDistance = null;
+        let startX = 0;
+        let startY = 0;
+        let isDragging = false;
+        let velocityY = 0;
+        let velocityX = 0;
+        let lastTap = 0;
 
-const namaHewan = document.getElementById("namaHewan");
-const controlUI = document.getElementById("controlUI");
-const scene = document.getElementById("scene");
-const assetContainer = document.getElementById("assetContainer");
+        const namaHewan = document.getElementById("namaHewan");
+        const controlUI = document.getElementById("controlUI");
+        const scene = document.getElementById("scene");
+        const assetContainer = document.getElementById("assetContainer");
 
-fetch("data/animals.json")
-.then(res => res.json())
-.then(data => {
+        fetch("/data/animals.json")
+            .then(res => res.json())
+            .then(data => {
 
-    data.forEach(animal => {
+                data.forEach(animal => {
 
-        const modelAsset = document.createElement("a-asset-item");
-        modelAsset.setAttribute("id", animal.id + "Model");
-        modelAsset.setAttribute("src", animal.model);
-        assetContainer.appendChild(modelAsset);
+                    const modelAsset = document.createElement("a-asset-item");
+                    modelAsset.setAttribute("id", animal.id + "Model");
+                    modelAsset.setAttribute("src", animal.model);
+                    assetContainer.appendChild(modelAsset);
 
-        const audio = document.createElement("audio");
-        audio.setAttribute("id", animal.id + "Sound");
-        audio.setAttribute("src", animal.suara);
-        audio.setAttribute("preload", "auto");
-        document.body.appendChild(audio);
+                    const audio = document.createElement("audio");
+                    audio.setAttribute("id", animal.id + "Sound");
+                    audio.setAttribute("src", animal.suara);
+                    audio.setAttribute("preload", "auto");
+                    document.body.appendChild(audio);
 
-        const marker = document.createElement("a-marker");
-        marker.setAttribute("type", "pattern");
-        marker.setAttribute("url", animal.marker);
+                    const marker = document.createElement("a-marker");
+                    marker.setAttribute("type", "pattern");
+                    marker.setAttribute("url", animal.marker);
 
-        const entity = document.createElement("a-entity");
-        entity.setAttribute("id", animal.id + "Obj");
-        entity.setAttribute("gltf-model", "#" + animal.id + "Model");
-        entity.setAttribute("scale", `${animal.scale} ${animal.scale} ${animal.scale}`);
+                    const entity = document.createElement("a-entity");
+                    entity.setAttribute("id", animal.id + "Obj");
+                    entity.setAttribute("gltf-model", "#" + animal.id + "Model");
+                    entity.setAttribute("scale", `${animal.scale} ${animal.scale} ${animal.scale}`);
 
-        marker.appendChild(entity);
-        scene.appendChild(marker);
+                    marker.appendChild(entity);
+                    scene.appendChild(marker);
 
-        marker.addEventListener("markerFound", () => {
-            currentObj = entity;
-            currentScale = animal.scale;
-            currentRotationY = 0;
-            currentRotationX = 0;
-            currentSound = animal.id + "Sound;
+                    marker.addEventListener("markerFound", () => {
+                        currentObj = entity;
+                        currentScale = animal.scale;
+                        currentRotationY = 0;
+                        currentRotationX = 0;
+                        currentSound = animal.id + "Sound";
 
-            currentMinScale = animal.minScale || 0.3;
-            currentMaxScale = animal.maxScale || 3;
+                        currentMinScale = animal.minScale || 0.3;
+                        currentMaxScale = animal.maxScale || 3;
 
-            namaHewan.innerText = animal.nama;
-            namaHewan.style.display = "block";
-            controlUI.style.display = "flex";
+                        namaHewan.innerText = animal.nama;
+                        namaHewan.style.display = "block";
+                        controlUI.style.display = "flex";
 
-            entity.setAttribute("rotation", "0 0 0");
+                        entity.setAttribute("rotation", "0 0 0");
+                    });
+
+                    marker.addEventListener("markerLost", () => {
+                        namaHewan.style.display = "none";
+                        controlUI.style.display = "none";
+                        currentObj = null;
+                        currentSound = null;
+                    });
+
+                });
+
+            });
+
+        function updateRotation() {
+            if (!currentObj) return;
+            currentObj.setAttribute("rotation",
+                `${currentRotationX} ${currentRotationY} 0`);
+        }
+
+        function animate() {
+            if (currentObj && !isDragging) {
+
+                currentRotationY += velocityY;
+                currentRotationX += velocityX;
+
+                velocityY *= 0.92;
+                velocityX *= 0.92;
+
+                if (Math.abs(velocityY) < 0.01) velocityY = 0;
+                if (Math.abs(velocityX) < 0.01) velocityX = 0;
+
+                if (currentRotationX > 90) currentRotationX = 90;
+                if (currentRotationX < -90) currentRotationX = -90;
+
+                updateRotation();
+            }
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        function zoomIn() {
+            if (!currentObj) return;
+            currentScale += 0.1;
+            if (currentScale > currentMaxScale) currentScale = currentMaxScale;
+            currentObj.setAttribute("scale",
+                `${currentScale} ${currentScale} ${currentScale}`);
+        }
+
+        function zoomOut() {
+            if (!currentObj) return;
+            currentScale -= 0.1;
+            if (currentScale < currentMinScale) currentScale = currentMinScale;
+            currentObj.setAttribute("scale",
+                `${currentScale} ${currentScale} ${currentScale}`);
+        }
+
+        function rotateLeft() { velocityY = -2; }
+        function rotateRight() { velocityY = 2; }
+        function rotateUp() { velocityX = -2; }
+        function rotateDown() { velocityX = 2; }
+
+        function playSound() {
+            if (!currentSound) return;
+            const audio = document.getElementById(currentSound);
+            audio.pause();
+            audio.currentTime = 0;
+            audio.play().catch(() => { });
+        }
+
+        document.addEventListener("touchstart", function (e) {
+
+            let now = Date.now();
+            if (now - lastTap < 300 && currentObj) {
+                currentRotationX = 0;
+                currentRotationY = 0;
+                updateRotation();
+            }
+            lastTap = now;
+
+            if (e.touches.length === 1 && currentObj) {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                isDragging = true;
+                velocityX = 0;
+                velocityY = 0;
+            }
+
+            if (e.touches.length === 2) {
+                initialDistance = getDistance(e.touches);
+            }
+
         });
 
-        marker.addEventListener("markerLost", () => {
-            namaHewan.style.display = "none";
-            controlUI.style.display = "none";
-            currentObj = null;
-            currentSound = null;
+        document.addEventListener("touchmove", function (e) {
+
+            if (e.touches.length === 2 && currentObj) {
+
+                let newDistance = getDistance(e.touches);
+                let diff = newDistance - initialDistance;
+                initialDistance = newDistance;
+
+                currentScale += diff * 0.005;
+
+                if (currentScale < currentMinScale)
+                    currentScale = currentMinScale;
+                if (currentScale > currentMaxScale)
+                    currentScale = currentMaxScale;
+
+                currentObj.setAttribute("scale",
+                    `${currentScale} ${currentScale} ${currentScale}`);
+            }
+
+            if (isDragging && e.touches.length === 1 && currentObj) {
+
+                let deltaX = e.touches[0].clientX - startX;
+                let deltaY = e.touches[0].clientY - startY;
+
+                currentRotationY += deltaX * 0.3;
+                currentRotationX -= deltaY * 0.3;
+
+                velocityY = deltaX * 0.05;
+                velocityX = -deltaY * 0.05;
+
+                if (currentRotationX > 90) currentRotationX = 90;
+                if (currentRotationX < -90) currentRotationX = -90;
+
+                updateRotation();
+
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            }
+
         });
 
-    });
+        document.addEventListener("touchend", function () {
+            isDragging = false;
+        });
 
-});
+        function getDistance(touches) {
+            let dx = touches[0].clientX - touches[1].clientX;
+            let dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
 
-// ===== UPDATE ROTATION =====
-function updateRotation(){
-    if(!currentObj) return;
-    currentObj.setAttribute("rotation",
-        `${currentRotationX} ${currentRotationY} 0`);
-}
-
-// ===== ZOOM BUTTON =====
-function zoomIn(){
-    if(!currentObj) return;
-    currentScale += 0.1;
-    if(currentScale > currentMaxScale) currentScale = currentMaxScale;
-    currentObj.setAttribute("scale",
-        `${currentScale} ${currentScale} ${currentScale}`);
-}
-
-function zoomOut(){
-    if(!currentObj) return;
-    currentScale -= 0.1;
-    if(currentScale < currentMinScale) currentScale = currentMinScale;
-    currentObj.setAttribute("scale",
-        `${currentScale} ${currentScale} ${currentScale}`);
-}
-
-// ===== ROTATE BUTTON =====
-function rotateLeft(){ currentRotationY -= 15; updateRotation(); }
-function rotateRight(){ currentRotationY += 15; updateRotation(); }
-function rotateUp(){
-    currentRotationX -= 15;
-    if(currentRotationX < -90) currentRotationX = -90;
-    updateRotation();
-}
-function rotateDown(){
-    currentRotationX += 15;
-    if(currentRotationX > 90) currentRotationX = 90;
-    updateRotation();
-}
-
-// ===== SOUND =====
-function playSound(){
-    if(!currentSound) return;
-    const audio = document.getElementById(currentSound);
-    audio.pause();
-    audio.currentTime = 0;
-    audio.play().catch(()=>{});
-}
-
-// ===== TOUCH GESTURE =====
-document.addEventListener("touchstart", function(e){
-
-    if(e.touches.length === 1 && currentObj){
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        isDragging = true;
-    }
-
-    if(e.touches.length === 2){
-        initialDistance = getDistance(e.touches);
-    }
-
-});
-
-document.addEventListener("touchmove", function(e){
-
-    // PINCH ZOOM
-    if(e.touches.length === 2 && currentObj){
-        let newDistance = getDistance(e.touches);
-        let diff = newDistance - initialDistance;
-        initialDistance = newDistance;
-
-        currentScale += diff * 0.005;
-
-        if(currentScale < currentMinScale)
-            currentScale = currentMinScale;
-        if(currentScale > currentMaxScale)
-            currentScale = currentMaxScale;
-
-        currentObj.setAttribute("scale",
-            `${currentScale} ${currentScale} ${currentScale}`);
-    }
-
-    // SWIPE ROTATE
-    if(isDragging && e.touches.length === 1 && currentObj){
-
-        let deltaX = e.touches[0].clientX - startX;
-        let deltaY = e.touches[0].clientY - startY;
-
-        currentRotationY += deltaX * 0.3;
-        currentRotationX -= deltaY * 0.3;
-
-        if(currentRotationX > 90) currentRotationX = 90;
-        if(currentRotationX < -90) currentRotationX = -90;
-
-        updateRotation();
-
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-    }
-
-});
-
-document.addEventListener("touchend", function(){
-    isDragging = false;
-});
-
-function getDistance(touches){
-    let dx = touches[0].clientX - touches[1].clientX;
-    let dy = touches[0].clientY - touches[1].clientY;
-    return Math.sqrt(dx*dx + dy*dy);
-}
-
-</script>
+    </script>
 
 </body>
 
