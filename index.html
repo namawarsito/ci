@@ -69,8 +69,13 @@
     <div class="ui" id="controlUI">
         <button class="btn" onclick="zoomOut()">➖</button>
         <button class="btn" onclick="zoomIn()">➕</button>
+
+        <button class="btn" onclick="rotateUp()">⬆</button>
+        <button class="btn" onclick="rotateDown()">⬇</button>
+
         <button class="btn" onclick="rotateLeft()">⟲</button>
         <button class="btn" onclick="rotateRight()">⟳</button>
+
         <button class="btn" onclick="playSound()">🔊</button>
     </div>
 
@@ -78,7 +83,8 @@
 
         let currentObj = null;
         let currentScale = 0.5;
-        let currentRotation = 0;
+        let currentRotationY = 0;
+        let currentRotationX = 0;
         let currentSound = null;
         let currentMinScale = 0.3;
         let currentMaxScale = 3;
@@ -121,7 +127,8 @@
                     marker.addEventListener("markerFound", () => {
                         currentObj = entity;
                         currentScale = animal.scale;
-                        currentRotation = 0;
+                        currentRotationY = 0;
+                        currentRotationX = 0;
                         currentSound = animal.id + "Sound";
 
                         currentMinScale = animal.minScale || 0.3;
@@ -137,7 +144,6 @@
                     marker.addEventListener("markerLost", () => {
                         namaHewan.style.display = "none";
                         controlUI.style.display = "none";
-
                         currentObj = null;
                         currentSound = null;
                     });
@@ -148,38 +154,51 @@
 
         function zoomIn() {
             if (!currentObj) return;
-
             currentScale += 0.1;
             if (currentScale > currentMaxScale)
                 currentScale = currentMaxScale;
-
             currentObj.setAttribute("scale",
                 `${currentScale} ${currentScale} ${currentScale}`);
         }
 
         function zoomOut() {
             if (!currentObj) return;
-
             currentScale -= 0.1;
             if (currentScale < currentMinScale)
                 currentScale = currentMinScale;
-
             currentObj.setAttribute("scale",
                 `${currentScale} ${currentScale} ${currentScale}`);
         }
 
         function rotateLeft() {
             if (!currentObj) return;
-            currentRotation -= 15;
-            currentObj.setAttribute("rotation",
-                `0 ${currentRotation} 0`);
+            currentRotationY -= 15;
+            updateRotation();
         }
 
         function rotateRight() {
             if (!currentObj) return;
-            currentRotation += 15;
+            currentRotationY += 15;
+            updateRotation();
+        }
+
+        function rotateUp() {
+            if (!currentObj) return;
+            currentRotationX -= 15;
+            if (currentRotationX < -90) currentRotationX = -90;
+            updateRotation();
+        }
+
+        function rotateDown() {
+            if (!currentObj) return;
+            currentRotationX += 15;
+            if (currentRotationX > 90) currentRotationX = 90;
+            updateRotation();
+        }
+
+        function updateRotation() {
             currentObj.setAttribute("rotation",
-                `0 ${currentRotation} 0`);
+                `${currentRotationX} ${currentRotationY} 0`);
         }
 
         function playSound() {
