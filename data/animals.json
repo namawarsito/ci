@@ -20,5 +20,16 @@
     "minScale": 0.4,
     "maxScale": 3,
     "deskripsi": "Bebek hidup di sekitar air dan bersuara kwek."
+  },
+  {
+    "id": "wolf",
+    "nama": "WOLF",
+    "model": "assets/models/wolf.glb",
+    "suara": "assets/sounds/wolf.mp3",
+    "marker": "assets/markers/wolf.patt",
+    "scale": 0.6,
+    "minScale": 0.4,
+    "maxScale": 3,
+    "deskripsi": "wolf"
   }
 ]
